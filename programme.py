@@ -11,6 +11,109 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import datetime
 
+
+
+
+
+def histogramme(nb_graphe , x,y,couleurs_bars,label_x , label_y,
+                titre_graphique_un,titre_graphique_deux=None) :
+ 
+   if nb_graphe == 1 : 
+       fig, ax = plt.subplots(figsize=(10,6))  
+       ax.bar(x, y, label=x, color=couleurs_bars)
+       for i in range(len(x)):
+            plt.text(i, y[i], y[i] , ha="center")
+        
+       ax.set_ylabel(label_y)
+       ax.set_xlabel(label_x)
+       ax.set_title(titre_graphique_un)  
+       plt.show()
+       
+   elif nb_graphe == 2 :
+       figure, axis = plt.subplots(1,1 ) 
+       
+       axis[0,0].bar(x, y, label=x, color=couleurs_bars)
+       axis[0, 0].set_title(titre_graphique_un)
+       for i in range(len(x)):
+            plt.text(i, y[i], y[i] , ha="center")
+        
+       ax.set_ylabel(label_y)
+       ax.set_xlabel(label_x)
+       ax.set_title(titre_graphique_un)  
+       plt.show()
+       
+       axis[0,1].bar(x, y, label=x, color=couleurs_bars)
+       axis[0, 1].set_title(titre_graphique_deux)
+       for i in range(len(x)):
+            plt.text(i, y[i], y[i] , ha="center")
+        
+       ax.set_ylabel(label_y)
+       ax.set_xlabel(label_x)
+       ax.set_title(titre_graphique_deux)  
+       plt.show()
+       
+
+def barreHorizontal(x,y,titre_x,titre_graphique) :
+    fig, ax = plt.subplots(figsize=(8,4))
+
+    ax.barh(x,y,align='center',color='skyblue')
+    ax.invert_yaxis()  # Lire les labels de haut en bas
+    ax.set_xlabel(titre_x)
+    ax.set_title(titre_graphique)
+    
+    # Afficher les valeurs sur les barres
+    for i in range(len(y)):
+       ax.text(y[i], i, str(y[i]), va='center', ha='left')  # Position des valeurs
+
+    
+    plt.show()
+
+   
+def exporterPdf(nom_fichier ,nb_page, graphique_un = None , graphique_deux = None,
+                graphique_trois = None) :
+ with PdfPages(nom_fichier) as pdf:
+     if nb_page == 1 :
+          graphique_un  #Appeler ton graphique
+          pdf.savefig()
+          plt.close()
+          print("Exportation PDF effectué avec succès")
+     if nb_page == 2 : 
+         graphique_un  #Appeler ton graphique
+         pdf.savefig()
+         plt.close()
+         
+         graphique_deux  #Appeler ton graphique
+         pdf.savefig()
+         plt.close()   
+         print("Exportation PDF efectué avec succès")
+     if nb_page == 3 : 
+          graphique_un  #Appeler ton graphique
+          pdf.savefig()
+          plt.close()
+          
+          graphique_deux  #Appeler ton graphique
+          pdf.savefig()
+          plt.close()   
+          
+          graphique_trois  #Appeler ton graphique
+          pdf.savefig()
+          plt.close() 
+          print("Exportations PDF effectué avec succès")
+             
+             
+          d = pdf.infodict()
+          d['Title'] = 'Projet générateur de rapport PDF'
+          d['Author'] = 'Romario Quashie'
+          d['CreationDate'] = datetime.datetime(2024, 12, 30)
+          d['ModDate'] = datetime.datetime.today()  
+ 
+def ecrirePDF(fichier_pdf,label,resultat) :
+    with open(fichier_pdf,"a",encoding="utf-8") as f :
+        f.write(f"{label} {resultat}\n")
+        print(f"Données écrites dans {fichier_pdf} : {label} {resultat}")
+          
+#-------------------------------Programme principal-------------------------------------
+          
 #1 Se connecter à la base de données
 conn = pymysql.connect(
     host='localhost',
@@ -94,7 +197,6 @@ with conn.cursor() as cursor:
         #Fetch
         CA_Par_Produits = cursor.fetchall()
         df_CA_Par_Produits = pd.DataFrame().from_records(CA_Par_Produits)
-        print(df_CA_Par_Produits)
         
     finally :
         print("Récupération des produits effectué")
@@ -147,18 +249,57 @@ with conn.cursor() as cursor:
         
         #Fetch
         nb_Total_Client= cursor.fetchall()
-        df_Montant_Moyen_Ventes = pd.DataFrame.from_records(montant_Moyen_Ventes)
-    
+        df_Nb_Total_Clients = pd.DataFrame.from_records(nb_Total_Client)
        
     finally : 
         print("Récupération des ventes fournisseurs effectué ")   
+    nb_clients = df_Nb_Total_Clients['Nb clients'][0]
+    stats_nb_client =nb_clients            
+#--------------------Clients par Zone géographique--------------------------
+
+    try: 
+         #Ventes de produits par fournisseurs
+         sqlNb_Total_Client = "SELECT ville , count(id_clients) as 'client' from clients group by ville "
+         cursor.execute(sqlNb_Total_Client)
+         
+         #Fetch
+         nb_Clients_Ville = cursor.fetchall()
+         df_NB_Clients_Ville = pd.DataFrame.from_records(nb_Clients_Ville)
+         
+    finally : 
+         print("Récupération des clients par zone géographique effectué ") 
+
+df_NB_Clients_Ville
+nb_clients_paris = df_NB_Clients_Ville['client'][0]
+nb_clients_toulouse = df_NB_Clients_Ville['client'][1]
+nb_clients_Nantes = df_NB_Clients_Ville['client'][1]
+nb_clients_Lyon = df_NB_Clients_Ville['client'][1]
+
+
+
 #--------------------------Taux de croissance des ventes------------------------
+
 if (df_ventes_Par_Mois['Mois'] == 12).any() :
   decembre = df_ventes_Par_Mois[df_ventes_Par_Mois['Mois'] == 12]
-if (df_ventes_Par_Mois['Mois'] == 12).any() :
+  ventes_decembre = decembre['quantité totale'].iloc[0] 
+  
+  
+if (df_ventes_Par_Mois['Mois'] == 11).any() :
   novembre = df_ventes_Par_Mois[df_ventes_Par_Mois['Mois'] == 11]
-if (df_ventes_Par_Mois['Mois'] == 12).any() :
-  octobre = df_ventes_Par_Mois[df_ventes_Par_Mois['Mois'] == 10]        
+  ventes_novembre = novembre['quantité totale'].iloc[0]
+  
+  
+if (df_ventes_Par_Mois['Mois'] == 10).any() :
+  octobre = df_ventes_Par_Mois[df_ventes_Par_Mois['Mois'] == 10]     
+  ventes_octobre = octobre['quantité totale'].iloc[0]
+  
+tx_croissance_oct_nov = (ventes_novembre-ventes_octobre)/(ventes_octobre) * 100 
+
+
+tx_croissance_nov_dec = (ventes_decembre-ventes_novembre)/(ventes_novembre) * 100 
+
+tx_croissance_oct_nov = (ventes_novembre-ventes_octobre)/(ventes_octobre) * 100 
+
   
 #----------------------------Graphique CA Par produits-------------------  
 laptop = df_CA_Par_Produits['montant'][0]
@@ -169,65 +310,26 @@ ecouteurs_Bose = df_CA_Par_Produits['montant'][4]
 montre_Connectee = df_CA_Par_Produits['montant'][5]
 clavier_logitech = df_CA_Par_Produits['montant'][6]
 chargeur_sans_fil = df_CA_Par_Produits['montant'][7]
-labels = ['laptop','Casque Sony','Tablette Samsung','Smartphone Apple']  
+labels_produits = ['laptop','Casque Sony','Tablette Samsung','Smartphone Apple']  
 couleurs_bars = ['tab:red', 'tab:blue', 'tab:red', 'tab:orange']
 montants = [laptop ,casque_Sony,tablette_Samsung,smartphone_Apple] 
 
 
+#-----------------------------Exportation-------------------------------
+label_stats_nb_client = "Nombre de clients : "
+label_tx_croissance_oct_nov = "Taux de croissance des ventes octobre-novembre : "
+label_tx_croissance_nov_dec = "Taux de croissance des ventes novembre-decembre : "
 
-def histogramme(x,y,couleurs_bars,label_x , label_y,titre_graphique) :
- 
-   fig, ax = plt.subplots(figsize=(10,6))  
-   ax.bar(x, y, label=x, color=couleurs_bars)
-   for i in range(len(x)):
-        plt.text(i, y[i], y[i] , ha="center")
-    
-   ax.set_ylabel(label_y)
-   ax.set_xlabel(label_x)
-   ax.set_title(titre_graphique)  
-   plt.show()
-   
-def exporterPdf(nom_fichier ,nb_page, graphique_un = None , graphique_deux = None,
-                graphique_trois = None) :
- with PdfPages(nom_fichier) as pdf:
-     if nb_page == 1 :
-          graphique_un  #Appeler ton graphique
-          pdf.savefig()
-          plt.close()
-          print("Exportation PDF effectué avec succès")
-     if nb_page == 2 : 
-         graphique_un  #Appeler ton graphique
-         pdf.savefig()
-         plt.close()
-         
-         graphique_deux  #Appeler ton graphique
-         pdf.savefig()
-         plt.close()   
-         print("Exportation PDF efectué avec succès")
-     if nb_page == 3 : 
-          graphique_un  #Appeler ton graphique
-          pdf.savefig()
-          plt.close()
-          
-          graphique_deux  #Appeler ton graphique
-          pdf.savefig()
-          plt.close()   
-          
-          graphique_trois  #Appeler ton graphique
-          pdf.savefig()
-          plt.close() 
-          print("Exportations PDF effectué avec succès")
-             
-             
-          d = pdf.infodict()
-          d['Title'] = 'Projet générateur de rapport PDF'
-          d['Author'] = 'Romario Quashie'
-          d['Subject'] = 'How to create a multipage pdf file and set its metadata'
-          d['CreationDate'] = datetime.datetime(2024, 12, 30)
-          d['ModDate'] = datetime.datetime.today()     
-         
-#--------------------programme principal----------------------------------------         
-histogramme_CA_Par_Produits = histogramme(labels,montants, couleurs_bars,"Nom des produits","Chiffre d'affaires (en Euros)",
-             "HIstogramme de la répartition du chiffre d'affaires de l'entreprise en fonction des produits")   
+ecrirePDF("Statistiques ventes.pdf",label_stats_nb_client , stats_nb_client)
+ecrirePDF("Statistiques ventes.pdf",label_tx_croissance_oct_nov , tx_croissance_oct_nov)
+ecrirePDF("Statistiques ventes.pdf",label_tx_croissance_nov_dec, tx_croissance_nov_dec)
 
-exporterPdf("Rapports ventes.pdf", 1 , graphique_un = histogramme_CA_Par_Produits)     
+clients = [nb_clients_paris,nb_clients_toulouse,nb_clients_Nantes,nb_clients_Lyon]
+villes = ['Paris','Toulouse','Nantes','Lyon']
+clients_Par_Ville = barreHorizontal(villes,clients,"Nombre de clients","Répartition des cllients par zone géographique")
+exporterPdf("Clients par ville.pdf", 1 , graphique_un = clients_Par_Ville) 
+
+histogramme_CA_Par_Produits = histogramme(labels_produits,montants, couleurs_bars,"Nom des produits",
+ "Chiffre d'affaires (en Euros)", "HIstogramme de la répartition du chiffre d'affaires de l'entreprise en fonction des produits") 
+exporterPdf("Chiffre d'affaire par produits.pdf", 1 , graphique_un = histogramme_CA_Par_Produits)      
+         
